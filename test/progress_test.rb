@@ -17,6 +17,25 @@ class ProgressJob
     at(5, 5, 'complete')
   end
 end
+
+class IncludeBothJob
+  extend Resque::Plugins::Meta
+  extend Resque::Plugins::Progress
+  @queue = :test
+
+  def self.expire_meta_in
+    10
+  end
+
+  def self.perform(meta_id)
+    (0..4).each do |i|
+      at(i, 5, 'working')
+    end
+    at(5, 5, 'complete')
+  end
+end
+
+
 class ProgressTest < Test::Unit::TestCase
   def setup
     Resque.redis.flushall
@@ -59,6 +78,28 @@ class ProgressTest < Test::Unit::TestCase
     worker.work(0)
 
     meta = ProgressJob.get_meta(meta.meta_id)
+    assert_not_nil(meta)
+    assert(meta.finished?)
+    assert_not_nil(meta.progress)
+    assert_equal(5, meta.progress[:num])
+    assert_equal(5, meta.progress[:total])
+    assert_equal(100, meta.progress[:percent])
+    assert_equal('complete', meta.progress[:message])
+  end
+
+  def test_include_both
+    meta = IncludeBothJob.enqueue
+    assert_not_nil(meta)
+    assert_not_nil(meta.progress)
+    assert_equal(0, meta.progress[:num])
+    assert_equal(1, meta.progress[:total])
+    assert_equal(0, meta.progress[:percent])
+    assert_nil(meta.progress[:message])
+
+    worker = Resque::Worker.new(:test)
+    worker.work(0)
+
+    meta = IncludeBothJob.get_meta(meta.meta_id)
     assert_not_nil(meta)
     assert(meta.finished?)
     assert_not_nil(meta.progress)
