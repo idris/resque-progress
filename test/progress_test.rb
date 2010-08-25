@@ -1,3 +1,4 @@
+require 'digest/sha1'
 require 'resque'
 require 'resque/plugins/progress'
 require 'resque/plugins/progress/version'
@@ -8,6 +9,10 @@ class ProgressJob
 
   def self.expire_meta_in
     10
+  end
+
+  def self.meta_id(*args)
+    Digest::SHA1.hexdigest([rand.to_s, self, args].join)
   end
 
   def self.perform(meta_id)
@@ -25,6 +30,10 @@ class IncludeBothJob
 
   def self.expire_meta_in
     10
+  end
+
+  def self.meta_id(*args)
+    Digest::SHA1.hexdigest([rand.to_s, self, args].join)
   end
 
   def self.perform(meta_id)

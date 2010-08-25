@@ -8,10 +8,15 @@ module Resque
         Resque::Plugins::Meta::Metadata.send(:include, Resque::Plugins::Progress::Metadata)
       end
 
-      def at(num, total, message)
-        meta = get_meta(meta_id)
-        meta.progress = [num, total, message]
-        meta.save
+      def at(num, total, message = nil)
+        if meta = get_meta(@meta_id)
+          meta.progress = [num, total, message]
+          meta.save
+        end
+      end
+
+      def before_perform_progress(meta_id, *args)
+        @meta_id = meta_id
       end
 
       module Metadata
