@@ -50,10 +50,6 @@ class ProgressTest < Test::Unit::TestCase
     Resque.redis.flushall
   end
 
-  def test_progress_version
-    assert_equal('1.0.0', Resque::Plugins::Progress::Version)
-  end
-
   def test_resque_version
     major, minor, patch = Resque::Version.split('.')
     assert_equal 1, major.to_i
